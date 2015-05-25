@@ -171,6 +171,10 @@ socket.on("RIP", function(){
   socket.close();
 });
 
+socket.on("respawn", function(){
+  socket.emit("respawn");
+});
+
 
 function drawFood(food) {
   graph.strokeStyle = foodConfig.borderColor;
@@ -204,6 +208,10 @@ function drawPlayer() {
   graph.font = "bold " + fontSize/2 + "px sans-serif";		// escreve a massa do player
   graph.strokeText(player.mass, player.x, player.y+fontSize);
   graph.fillText(player.mass, player.x, player.y+fontSize);
+  
+  graph.font = "bold " + fontSize/2 + "px sans-serif";		// escreve a massa do player
+  graph.strokeText(player.speed, player.x, player.y -fontSize);
+  graph.fillText(player.speed, player.x, player.y - fontSize);
 }
 
 function drawEnemy(enemy) {

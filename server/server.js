@@ -9,19 +9,19 @@ var foods = [];
 var sockets = [];
 
 
-var maxSizeMass = 50;
-var maxMoveSpeed = 100;
+var maxSizeMass = 100;
+var maxMoveSpeed = 1000;
 
-var massDecreaseRatio = 1000;
+var massDecreaseRatio = 10;
 
 var foodMass = 1;
 
-var newFoodPerPlayer = 3;
-var respawnFoodPerPlayer = 1;
+var newFoodPerPlayer = 10;
+var respawnFoodPerPlayer = 10;
 
 var foodRandomWidth = 500;
 var foodRandomHeight = 500;
-var maxFoodCount = 50;
+var maxFoodCount = 100;
 
 var noPlayer = 0;
 
@@ -127,6 +127,15 @@ io.on('connection', function (socket) {
         socket.broadcast.emit("playerDisconnect", {playersList: users, disconnectName: playerName});
     });
 
+    socket.on('respawn', function () {
+        var playerIndex = findPlayerIndex(userID);
+        var playerName = users[playerIndex].name;
+	users[playerIndex].x = genPos(0, users[playerIndex].screenWidth);
+	users[playerIndex].y = genPos(0, users[playerIndex].screenHeight);
+	users[playerIndex].mass = 1;
+        console.log('User #' + playerName + ' voltou dos mortos (as a zombie)');
+    });
+
     socket.on("playerChat", function (data) {
         var _sender = data.sender.replace(/(<([^>]+)>)/ig, "");
         var _message = data.message.replace(/(<([^>]+)>)/ig, "");
@@ -183,9 +192,10 @@ io.on('connection', function (socket) {
                             currentPlayer.speed += currentPlayer.mass / massDecreaseRatio;
                         }
 
-                        sockets[users[e].playerID].emit("RIP");
-                        sockets[users[e].playerID].disconnect();
-                        users.splice(e, 1);
+                        //sockets[users[e].playerID].emit("RIP");
+                        //sockets[users[e].playerID].disconnect();
+                        sockets[users[e].playerID].emit("respawn");
+                        //users.splice(e, 1);
                         break;
                     }
                 }
@@ -201,7 +211,7 @@ io.on('connection', function (socket) {
 });
 
 // Don't touch on ip
-var ipaddress = process.env.OPENSHIFT_NODEJS_IP || process.env.IP || "127.0.0.1";
+var ipaddress = process.env.OPENSHIFT_NODEJS_IP || process.env.IP || "192.168.0.2";
 var serverport = process.env.OPENSHIFT_NODEJS_PORT || process.env.PORT || 3000;
 http.listen( serverport, ipaddress, function() {
     console.log('listening on *:' + serverport);
