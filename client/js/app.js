@@ -200,6 +200,10 @@ function drawPlayer() {
   graph.font = "bold " + fontSize + "px sans-serif";
   graph.strokeText(player.name, player.x, player.y);
   graph.fillText(player.name, player.x, player.y);
+
+  graph.font = "bold " + fontSize/2 + "px sans-serif";		// escreve a massa do player
+  graph.strokeText(player.mass, player.x, player.y+fontSize);
+  graph.fillText(player.mass, player.x, player.y+fontSize);
 }
 
 function drawEnemy(enemy) {
