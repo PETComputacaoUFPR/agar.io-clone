@@ -211,7 +211,7 @@ io.on('connection', function (socket) {
 });
 
 // Don't touch on ip
-var ipaddress = process.env.OPENSHIFT_NODEJS_IP || process.env.IP || "192.168.0.2";
+var ipaddress = process.env.OPENSHIFT_NODEJS_IP || process.env.IP || "127.0.0.1";
 var serverport = process.env.OPENSHIFT_NODEJS_PORT || process.env.PORT || 3000;
 http.listen( serverport, ipaddress, function() {
     console.log('listening on *:' + serverport);
