@@ -16,8 +16,8 @@ var massDecreaseRatio = 10;
 
 var foodMass = 1;
 
-var newFoodPerPlayer = 10;
-var respawnFoodPerPlayer = 10;
+var newFoodPerPlayer = 5;
+var respawnFoodPerPlayer = 1;
 
 var foodRandomWidth = 500;
 var foodRandomHeight = 500;
@@ -155,14 +155,15 @@ io.on('connection', function (socket) {
         console.log('User #' + userID + ' disconnected');
         socket.broadcast.emit("playerDisconnect", {playersList: users, disconnectName: playerName});
     });
-
-    socket.on('respawn', function () {
-        var playerIndex = findPlayerIndex(userID);
-        var playerName = users[playerIndex].name;
-	users[playerIndex].x = genPos(0, users[playerIndex].screenWidth);
-	users[playerIndex].y = genPos(0, users[playerIndex].screenHeight);
-	users[playerIndex].mass = 1;
-        console.log('User #' + playerName + ' voltou dos mortos (as a zombie)');
+    
+    socket.on('respawn', function (player) {
+        player.mass = 0;
+        player.x = genPos(0, player.screenWidth);
+        player.y = genPos(0, player.screenHeight);
+    	users.push(player);
+    	currentPlayer = player;
+    	socket.broadcast.emit("serverUpdateAllPlayers", users);
+        console.log('User ' + player.name + ' is back from the deads (as a zombie)');
     });
 
     socket.on("playerChat", function (data) {
@@ -220,11 +221,9 @@ io.on('connection', function (socket) {
                         if (currentPlayer.speed < maxMoveSpeed) {
                             currentPlayer.speed += currentPlayer.mass / massDecreaseRatio;
                         }
-
-                        //sockets[users[e].playerID].emit("RIP");
-                        //sockets[users[e].playerID].disconnect();
+                        
                         sockets[users[e].playerID].emit("respawn");
-                        //users.splice(e, 1);
+                        users.splice(e, 1);
                         break;
                     }
                 }

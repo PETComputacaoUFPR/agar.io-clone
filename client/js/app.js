@@ -175,10 +175,10 @@ socket.on("RIP", function(){
   socket.close();
 });
 
+// To live again (Be a zombi \o/)
 socket.on("respawn", function(){
-  socket.emit("respawn");
+  socket.emit("respawn", player);
 });
-
 
 function drawFood(food) {
   graph.strokeStyle = food.color.border || foodConfig.borderColor;
