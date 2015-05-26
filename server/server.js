@@ -114,6 +114,19 @@ function randomColor(){
     }
 }
 
+function movePlayer(player, target) {
+    var xVelocity = target.x - player.x,
+        yVelocity = target.y - player.y,
+        vMag = Math.sqrt(xVelocity * xVelocity + yVelocity * yVelocity),
+        normalisedX = xVelocity/vMag,
+        normalisedY = yVelocity/vMag,
+        finalX = vMag > 25 ? normalisedX * 250 / player.speed : xVelocity * 10 / player.speed,
+        finalY = vMag > 25 ? normalisedY * 250 / player.speed : yVelocity * 10 / player.speed;
+
+    player.x += finalX;
+    player.y += finalY;
+}
+
 io.on('connection', function (socket) {
     console.log('A user connected. Assigning UserID...');
 
@@ -133,8 +146,6 @@ io.on('connection', function (socket) {
             currentPlayer = player;
         }
 
-        //socket.emit("playerJoin", {playersList: users, connectedName: player.name});
-        //socket.broadcast.emit("playerJoin", {playersList: users, connectedName: player.name});
         io.emit("playerJoin", {playersList: users, connectedName: player.name});
         console.log("Total player: " + users.length);
 
@@ -155,7 +166,7 @@ io.on('connection', function (socket) {
         console.log('User #' + userID + ' disconnected');
         socket.broadcast.emit("playerDisconnect", {playersList: users, disconnectName: playerName});
     });
-    
+
     socket.on('respawn', function (player) {
         player.mass = 0;
         player.x = genPos(0, player.screenWidth);
@@ -175,8 +186,7 @@ io.on('connection', function (socket) {
     // Heartbeat function, update everytime
     socket.on("playerSendTarget", function (target) {
         if (target.x != currentPlayer.x && target.y != currentPlayer.y) {
-            currentPlayer.x += (target.x - currentPlayer.x) / currentPlayer.speed;
-            currentPlayer.y += (target.y - currentPlayer.y) / currentPlayer.speed;
+            movePlayer(currentPlayer, target);
 
             users[findPlayerIndex(currentPlayer.playerID)] = currentPlayer;
 
@@ -221,7 +231,7 @@ io.on('connection', function (socket) {
                         if (currentPlayer.speed < maxMoveSpeed) {
                             currentPlayer.speed += currentPlayer.mass / massDecreaseRatio;
                         }
-                        
+
                         sockets[users[e].playerID].emit("respawn");
                         users.splice(e, 1);
                         break;
