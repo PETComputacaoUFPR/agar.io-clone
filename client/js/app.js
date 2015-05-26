@@ -44,7 +44,11 @@ var player = {
   x: gameWidth / 2, y: gameHeight / 2,
   mass: 0, speed: 80,
   screenWidth: gameWidth,
-  screenHeight: gameHeight
+  screenHeight: gameHeight,
+  color: {
+      fill: playerConfig.fillColor,
+      border: playerConfig.borderColor
+  }
 };
 
 var foods = [];
@@ -177,8 +181,8 @@ socket.on("respawn", function(){
 
 
 function drawFood(food) {
-  graph.strokeStyle = foodConfig.borderColor;
-  graph.fillStyle = foodConfig.fillColor;
+  graph.strokeStyle = food.color.border || foodConfig.borderColor;
+  graph.fillStyle = food.color.fill || foodConfig.fillColor;
   graph.lineWidth = foodConfig.border;
   graph.beginPath();
   graph.arc(food.x, food.y, foodConfig.size, 0, 2 * Math.PI);
@@ -187,8 +191,8 @@ function drawFood(food) {
 }
 
 function drawPlayer() {
-  graph.strokeStyle = playerConfig.borderColor;
-  graph.fillStyle = playerConfig.fillColor;
+  graph.strokeStyle = player.color.border || playerConfig.borderColor;
+  graph.fillStyle = player.color.fill || playerConfig.fillColor;
   graph.lineWidth = playerConfig.border;
   graph.beginPath();
   graph.arc(player.x, player.y, playerConfig.defaultSize + player.mass, 0, 2 * Math.PI);
@@ -208,15 +212,15 @@ function drawPlayer() {
   graph.font = "bold " + fontSize/2 + "px sans-serif";		// escreve a massa do player
   graph.strokeText(player.mass, player.x, player.y+fontSize);
   graph.fillText(player.mass, player.x, player.y+fontSize);
-  
+
   graph.font = "bold " + fontSize/2 + "px sans-serif";		// escreve a massa do player
   graph.strokeText(player.speed, player.x, player.y -fontSize);
   graph.fillText(player.speed, player.x, player.y - fontSize);
 }
 
 function drawEnemy(enemy) {
-  graph.strokeStyle = enemyConfig.borderColor;
-  graph.fillStyle = enemyConfig.fillColor;
+  graph.strokeStyle = enemy.color.border || enemyConfig.borderColor;
+  graph.fillStyle = enemy.color.fill || enemyConfig.fillColor;
   graph.lineWidth = enemyConfig.border;
   graph.beginPath();
   graph.arc(enemy.x, enemy.y, enemyConfig.defaultSize + enemy.mass, 0, 2 * Math.PI);

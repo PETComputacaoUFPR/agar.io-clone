@@ -40,7 +40,9 @@ function addFoods(target) {
     var ry = genPos(0, target.screenHeight);
     var food = {
         foodID: (new Date()).getTime(),
-        x: rx, y: ry
+        x: rx,
+        y: ry,
+        color: randomColor()
     };
 
     foods[foods.length] = food;
@@ -87,6 +89,31 @@ function hitTest(start, end, min) {
     return (distance <= min);
 }
 
+// From SarenCurrie/agar.io-clone
+function randomColor(){
+    var color = '#' + ('00000'+(Math.random()*(1<<24)|0).toString(16)).slice(-6),
+        difference = 32,
+        c = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(color),
+        r = parseInt(c[1], 16) - difference,
+        g = parseInt(c[2], 16) - difference,
+        b = parseInt(c[3], 16) - difference;
+
+    if (r < 0) {
+        r = 0;
+    }
+    if (g < 0) {
+        g = 0;
+    }
+    if (b < 0) {
+        b = 0;
+    }
+
+    return {
+        fill: color,
+        border: '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)
+    }
+}
+
 io.on('connection', function (socket) {
     console.log('A user connected. Assigning UserID...');
 
@@ -100,13 +127,15 @@ io.on('connection', function (socket) {
         sockets[player.playerID] = socket;
 
         if (findPlayer(player.playerID) == null) {
+            player.color = randomColor();
             console.log("Player " + player.playerID + " connected!");
             users.push(player);
             currentPlayer = player;
         }
 
-        socket.emit("playerJoin", {playersList: users, connectedName: player.name});
-        socket.broadcast.emit("playerJoin", {playersList: users, connectedName: player.name});
+        //socket.emit("playerJoin", {playersList: users, connectedName: player.name});
+        //socket.broadcast.emit("playerJoin", {playersList: users, connectedName: player.name});
+        io.emit("playerJoin", {playersList: users, connectedName: player.name});
         console.log("Total player: " + users.length);
 
         // Add new food when player connected
