@@ -12,7 +12,7 @@
   "contributors": [
     "Igor Antun <igorantunc@hotmail.com> (https://github.com/IgorAntun)",
     "Chris Morgan <chris.j.r.morgan@gmail.com> (https://github.com/drpotato)",
-    "PET Computação UFPR <pet@inf.ufpr.br> (http://pet.inf.ufpr.br)"
+    "PET ComputaÃ§Ã£o UFPR <pet@inf.ufpr.br> (http://pet.inf.ufpr.br)"
   ],
   "dependencies": {
     "express": "^4.12.4",
@@ -21,9 +21,5 @@
   },
   "devDependencies": {
     "nodemon": "^1.2.1"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
   }
 }
