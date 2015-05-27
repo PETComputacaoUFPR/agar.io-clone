@@ -8,20 +8,22 @@ var users = [];
 var foods = [];
 var sockets = [];
 
-
 var maxSizeMass = 50;
 var maxMoveSpeed = 10;
 
 var massDecreaseRatio = 1000;
 
 var foodMass = 1;
+var foodFeedMass = 5;
 
 var newFoodPerPlayer = 30;
+
 var respawnFoodPerPlayer = 1;
 
 var foodRandomWidth = 500;
 var foodRandomHeight = 500;
-var maxFoodCount = 50;
+
+var maxFoodCount = 100;
 
 var noPlayer = 0;
 
@@ -63,6 +65,7 @@ function findIndex(arr, id) {
 
 }
 
+
 function findPlayer(id) {
     var index = findIndex(users, id);
 
@@ -87,6 +90,30 @@ function movePlayer(player, target) {
     player.x += deltaX;
 }
 
+// From SarenCurrie/agar.io-clone
+function randomColor(){
+    var color = '#' + ('00000'+(Math.random()*(1<<24)|0).toString(16)).slice(-6),
+        difference = 32,
+        c = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(color),
+        r = parseInt(c[1], 16) - difference,
+        g = parseInt(c[2], 16) - difference,
+        b = parseInt(c[3], 16) - difference;
+
+    if (r < 0) {
+        r = 0;
+    }
+    if (g < 0) {
+        g = 0;
+    }
+    if (b < 0) {
+        b = 0;
+    }
+
+    return {
+        fill: color,
+        border: '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)
+    }
+}
 
 io.on('connection', function (socket) {
     console.log('A user connected. Assigning UserID...');
@@ -127,6 +154,30 @@ io.on('connection', function (socket) {
         socket.broadcast.emit('playerDisconnect', {playersList: users, disconnectName: playerName});
     });
 
+    socket.on('respawn', function (player) {
+        player.mass = 0;
+        player.x = genPos(0, player.screenWidth);
+        player.y = genPos(0, player.screenHeight);
+    	users.push(player);
+    	currentPlayer = player;
+    	socket.broadcast.emit('serverUpdateAllPlayers', users);
+        console.log('User ' + player.name + ' is back from the deads (as a zombie)');
+    });
+
+    socket.on('feed', function (player, target) {
+            var index = findPlayerIndex(player.playerID);
+            users[index].mass -= foodFeedMass;
+            var food = {
+                foodID: (new Date()).getTime(),
+                x: target.x,
+                y: target.y,
+                mass: 5,
+                color: player.color
+            }
+            foods[foods.length] = food;
+            console.log('User ' + player.name + ' feeded the friends');
+    });
+
     socket.on('playerChat', function (data) {
         var _sender = data.sender.replace(/(<([^>]+)>)/ig, '');
         var _message = data.message.replace(/(<([^>]+)>)/ig, '');
@@ -135,21 +186,26 @@ io.on('connection', function (socket) {
 
     // Heartbeat function, update everytime
     socket.on('playerSendTarget', function (target) {
-        console.log(currentPlayer.x + " " + currentPlayer.y);
+        //console.log(currentPlayer.x + " " + currentPlayer.y);
         if (target.x != currentPlayer.x || target.y != currentPlayer.y) {
             movePlayer(currentPlayer, target);
-
+            
             for (var f = 0; f < foods.length; f++) {
                 if (hitTest(
                         {x: foods[f].x, y: foods[f].y},
                         {x: currentPlayer.x, y: currentPlayer.y},
                         currentPlayer.mass + defaultPlayerSize
                     )) {
+
+                    var isFeed = foods[f].mass; // only the food from a feed has mass
                     foods[f] = {};
                     foods.splice(f, 1);
 
                     if (currentPlayer.mass < maxSizeMass) {
-                        currentPlayer.mass += foodMass;
+                        if (isFeed)
+                            currentPlayer.mass += foodFeedMass;
+                        else
+                            currentPlayer.mass += foodMass;
                     }
 
                     if (currentPlayer.speed < maxMoveSpeed) {
@@ -181,8 +237,7 @@ io.on('connection', function (socket) {
                             currentPlayer.speed += currentPlayer.mass / massDecreaseRatio;
                         }
 
-                        sockets[users[e].id].emit('RIP');
-                        sockets[users[e].id].disconnect();
+                        sockets[users[e].playerID].emit("respawn");
                         users.splice(e, 1);
                         break;
                     }

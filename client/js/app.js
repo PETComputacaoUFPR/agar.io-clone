@@ -13,6 +13,8 @@ var disconnected = false;
 var startPingTime = 0;
 
 var KEY_ENTER = 13;
+var KEY_W = 87;
+var KEY_w = 119;
 
 var chatCommands = {};
 var backgroundColor = "#EEEEEE";
@@ -21,7 +23,8 @@ var foodConfig = {
   border: 2,
   borderColor: "#f39c12",
   fillColor: "#f1c40f",
-  size: 5
+  size: 5,
+  feedSize: 15
 };
 
 var playerConfig = {
@@ -52,7 +55,11 @@ var player = {
   screenWidth: screenWidth,
   screenHeight: screenHeight,
   gameWidth: gameWidth,
-  gameHeight: gameHeight
+  gameHeight: gameHeight,
+  color: {
+      fill: playerConfig.fillColor,
+      border: playerConfig.borderColor
+  }
 };
 
 var foods = [];
@@ -61,7 +68,15 @@ var target = {x: player.x, y: player.y};
 
 var c = document.getElementById("cvs");
 c.addEventListener("mousemove", gameInput, false);
+
 c.width = screenWidth; c.height = screenHeight;
+c.addEventListener("keypress", function(key){
+  var key = key.which || key.keyCode;
+  if (key == KEY_W || key == KEY_w) {
+    if (player.mass >= 20)
+      socket.emit("feed", player, target);
+  }
+});
 
 var graph = c.getContext("2d");
 
@@ -226,20 +241,27 @@ socket.on("RIP", function(){
   socket.close();
 });
 
+// To live again (Be a zombi \o/)
+socket.on("respawn", function(){
+  socket.emit("respawn", player);
+});
 
 function drawFood(food) {
-  graph.strokeStyle = foodConfig.borderColor;
-  graph.fillStyle = foodConfig.fillColor;
+  graph.strokeStyle = food.color.border || foodConfig.borderColor;
+  graph.fillStyle = food.color.fill || foodConfig.fillColor;
   graph.lineWidth = foodConfig.border;
   graph.beginPath();
-  graph.arc(food.x - player.x + screenWidth / 2, food.y - player.y + screenHeight / 2, foodConfig.size, 0, 2 * Math.PI);
+  if (food.mass)
+    graph.arc(food.x - player.x + screenWidth / 2, food.y - player.y + screenHeight / 2, foodConfig.feedSize, 0, 2 * Math.PI);
+  else
+    graph.arc(food.x - player.x + screenWidth / 2, food.y - player.y + screenHeight / 2, foodConfig.size, 0, 2 * Math.PI);
   graph.stroke();
   graph.fill();
 }
 
 function drawPlayer() {
-  graph.strokeStyle = playerConfig.borderColor;
-  graph.fillStyle = playerConfig.fillColor;
+  graph.strokeStyle = player.color.border || playerConfig.borderColor;
+  graph.fillStyle = player.color.fill || playerConfig.fillColor;
   graph.lineWidth = playerConfig.border;
   graph.beginPath();
   graph.arc(screenWidth / 2, screenHeight / 2, playerConfig.defaultSize + player.mass, 0, 2 * Math.PI);
@@ -255,11 +277,15 @@ function drawPlayer() {
   graph.font = "bold " + fontSize + "px sans-serif";
   graph.strokeText(player.name, screenWidth / 2, screenHeight / 2);
   graph.fillText(player.name, screenWidth / 2, screenHeight / 2);
+
+  graph.font = "bold " + fontSize/2 + "px sans-serif";		// escreve a massa do player
+  graph.strokeText(player.mass, screenWidth / 2, screenHeight / 2 + fontSize);
+  graph.fillText(player.mass, screenWidth / 2, screenHeight / 2 + fontSize);
 }
 
 function drawEnemy(enemy) {
-  graph.strokeStyle = enemyConfig.borderColor;
-  graph.fillStyle = enemyConfig.fillColor;
+  graph.strokeStyle = enemy.color.border || enemyConfig.borderColor;
+  graph.fillStyle = enemy.color.fill || enemyConfig.fillColor;
   graph.lineWidth = enemyConfig.border;
   graph.beginPath();
   graph.arc(enemy.x - player.x + screenWidth / 2, enemy.y - player.y + screenHeight / 2, enemyConfig.defaultSize + enemy.mass, 0, 2 * Math.PI);
