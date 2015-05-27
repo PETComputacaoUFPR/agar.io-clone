@@ -10,13 +10,14 @@ var sockets = [];
 
 
 var maxSizeMass = 100;
-var maxMoveSpeed = 1000;
+var maxMoveSpeed = 100;
 
 var massDecreaseRatio = 10;
 
 var foodMass = 1;
+var foodFeedMass = 5;
 
-var newFoodPerPlayer = 5;
+var newFoodPerPlayer = 10;
 var respawnFoodPerPlayer = 1;
 
 var foodRandomWidth = 500;
@@ -177,6 +178,20 @@ io.on('connection', function (socket) {
         console.log('User ' + player.name + ' is back from the deads (as a zombie)');
     });
 
+    socket.on('feed', function (player, target) {
+            var index = findPlayerIndex(player.playerID);
+            users[index].mass -= foodFeedMass;
+            var food = {
+                foodID: (new Date()).getTime(),
+                x: target.x,
+                y: target.y,
+                mass: 5,
+                color: player.color
+            }
+            foods[foods.length] = food;
+            console.log('User ' + player.name + ' feeded the friends');
+    });
+
     socket.on("playerChat", function (data) {
         var _sender = data.sender.replace(/(<([^>]+)>)/ig, "");
         var _message = data.message.replace(/(<([^>]+)>)/ig, "");
@@ -196,11 +211,16 @@ io.on('connection', function (socket) {
                         {x: currentPlayer.x, y: currentPlayer.y},
                         currentPlayer.mass + defaultPlayerSize
                     )) {
+
+                    var isFeed = foods[f].mass; // only the food from a feed has mass
                     foods[f] = {};
                     foods.splice(f, 1);
 
                     if (currentPlayer.mass < maxSizeMass) {
-                        currentPlayer.mass += foodMass;
+                        if (isFeed)
+                            currentPlayer.mass += foodFeedMass;
+                        else
+                            currentPlayer.mass += foodMass;
                     }
 
                     if (currentPlayer.speed < maxMoveSpeed) {

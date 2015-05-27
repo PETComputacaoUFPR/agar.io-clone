@@ -11,12 +11,15 @@ var disconnected = false;
 var startPingTime = 0;
 
 var KEY_ENTER = 13;
+var KEY_W = 87;
+var KEY_w = 119;
 
 var foodConfig = {
   border: 2,
   borderColor: "#f39c12",
   fillColor: "#f1c40f",
-  size: 5
+  size: 5,
+  feedSize: 15
 };
 
 var playerConfig = {
@@ -58,6 +61,13 @@ var target = {x: player.x, y: player.y};
 var c = document.getElementById("cvs");
 c.addEventListener("mousemove", gameInput, false);
 c.width = gameWidth; c.height = gameHeight;
+c.addEventListener("keypress", function(key){
+  var key = key.which || key.keyCode;
+  if (key == KEY_W || key == KEY_w) {
+    if (player.mass >= 20)
+      socket.emit("feed", player, target);
+  }
+});
 
 var graph = c.getContext("2d");
 
@@ -185,7 +195,10 @@ function drawFood(food) {
   graph.fillStyle = food.color.fill || foodConfig.fillColor;
   graph.lineWidth = foodConfig.border;
   graph.beginPath();
-  graph.arc(food.x, food.y, foodConfig.size, 0, 2 * Math.PI);
+  if (food.mass)
+    graph.arc(food.x, food.y, foodConfig.feedSize, 0, 2 * Math.PI);
+  else
+    graph.arc(food.x, food.y, foodConfig.size, 0, 2 * Math.PI);
   graph.stroke();
   graph.fill();
 }
@@ -210,11 +223,11 @@ function drawPlayer() {
   graph.fillText(player.name, player.x, player.y);
 
   graph.font = "bold " + fontSize/2 + "px sans-serif";		// escreve a massa do player
-  graph.strokeText(player.mass, player.x, player.y+fontSize);
-  graph.fillText(player.mass, player.x, player.y+fontSize);
+  graph.strokeText(player.mass, player.x, player.y + fontSize);
+  graph.fillText(player.mass, player.x, player.y + fontSize);
 
   graph.font = "bold " + fontSize/2 + "px sans-serif";		// escreve a massa do player
-  graph.strokeText(player.speed, player.x, player.y -fontSize);
+  graph.strokeText(player.speed, player.x, player.y - fontSize);
   graph.fillText(player.speed, player.x, player.y - fontSize);
 }
 
