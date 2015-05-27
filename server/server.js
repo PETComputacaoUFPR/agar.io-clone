@@ -41,7 +41,8 @@ function addFoods(target) {
     foods.push({
         id: (new Date()).getTime(),
         x: genPos(0, target.gameWidth),
-        y: genPos(0, target.gameHeight)
+        y: genPos(0, target.gameHeight),
+        color: randomColor()
     });
 }
 
@@ -128,6 +129,7 @@ io.on('connection', function (socket) {
         sockets[player.id] = socket;
 
         if (findPlayer(player.id) == null) {
+            player.color = randomColor();
             console.log('Player ' + player.id + ' connected!');
             users.push(player);
             currentPlayer = player;
@@ -165,15 +167,16 @@ io.on('connection', function (socket) {
     });
 
     socket.on('feed', function (player, target) {
-            var index = findPlayerIndex(player.playerID);
+            var index = findIndex(users, player.id);
             users[index].mass -= foodFeedMass;
             var food = {
                 foodID: (new Date()).getTime(),
-                x: target.x,
-                y: target.y,
+                x: player.x + (target.x - player.screenWidth)/2,
+                y: player.y + (target.y - player.screenHeight)/2,
                 mass: 5,
                 color: player.color
             }
+            console.log(target, food, player);
             foods[foods.length] = food;
             console.log('User ' + player.name + ' feeded the friends');
     });
