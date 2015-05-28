@@ -63,9 +63,7 @@ function findIndex(arr, id) {
     }
 
     return -1;
-
 }
-
 
 function findPlayer(id) {
     var index = findIndex(users, id);
@@ -87,8 +85,8 @@ function movePlayer(player, target) {
     // deltaY = deltaY > 0 ? deltaY = Math.min(deltaY, target.y - player.y) : deltaY = Math.max(deltaY, target.y - player.y)
     // deltaX = deltaX > 0 ? deltaX = Math.min(deltaX, target.x - player.x) : deltaX = Math.max(deltaX, target.x - player.x)
     
-    player.y += deltaY;
-    player.x += deltaX;
+    player.y += ((player.y > 0 || player.y < 0 && deltaY > 0) && (player.y < player.gameHeight || player.y > player.gameHeight && deltaY < 0)) ? deltaY : 0;
+    player.x += ((player.x > 0 || player.x < 0 && deltaX > 0) && (player.x < player.gameWidth || player.x > player.gameWidth && deltaX < 0)) ? deltaX : 0;
 }
 
 // From SarenCurrie/agar.io-clone
@@ -158,8 +156,8 @@ io.on('connection', function (socket) {
 
     socket.on('respawn', function (player) {
         player.mass = 0;
-        player.x = genPos(0, player.screenWidth);
-        player.y = genPos(0, player.screenHeight);
+        player.x = genPos(0, player.gameWidth);
+        player.y = genPos(0, player.gameHeight);
     	users.push(player);
     	currentPlayer = player;
     	socket.broadcast.emit('serverUpdateAllPlayers', users);
@@ -171,8 +169,8 @@ io.on('connection', function (socket) {
             users[index].mass -= foodFeedMass;
             var food = {
                 foodID: (new Date()).getTime(),
-                x: player.x + (target.x - player.screenWidth)/2,
-                y: player.y + (target.y - player.screenHeight)/2,
+                x: (target.x - player.screenWidth / 2) + player.x,
+                y: (target.y - player.screenHeight / 2) + player.y,
                 mass: 5,
                 color: player.color
             }
@@ -231,16 +229,16 @@ io.on('connection', function (socket) {
                         {x: currentPlayer.x, y: currentPlayer.y},
                         currentPlayer.mass + defaultPlayerSize
                     )) {
-                    if (users[e].mass != 0 && users[e].mass < currentPlayer.mass - eatableMassDistance) {
-                        if (currentPlayer.mass < maxSizeMass) {
+                    if (users[e].mass != 0 && users[e].mass < currentPlayer.mass) {
+                        if (currentPlayer.mass < this.maxSizeMass) {
                             currentPlayer.mass += users[e].mass;
                         }
 
-                        if (currentPlayer.speed < maxMoveSpeed) {
+                        if (currentPlayer.speed < this.maxMoveSpeed) {
                             currentPlayer.speed += currentPlayer.mass / massDecreaseRatio;
                         }
 
-                        sockets[users[e].playerID].emit("respawn");
+                        sockets[users[e].id].emit("respawn");
                         users.splice(e, 1);
                         break;
                     }

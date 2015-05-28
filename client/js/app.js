@@ -3,8 +3,8 @@ var playerName = prompt("Your name please:").replace(/(<([^>]+)>)/ig,"");
 // Canvas
 var screenWidth = window.innerWidth;
 var screenHeight = window.innerHeight;
-var gameWidth = screenWidth * 3;
-var gameHeight = screenHeight * 3;
+var gameWidth = 4000;
+var gameHeight = 4000;
 
 var socket = io();
 var gameStart = false;
